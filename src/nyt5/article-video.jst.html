@@ -1,0 +1,30 @@
+<%
+    var lede = lede || false;
+    var promo_image_url = promo_image_url || false;
+%>
+
+<figure class="promo media video <%= lede ? 'lede' : 'embedded' %> has-adjacency layout-large-horizontal" data-videoid="<%= data_id %>" data-media-action="modal" data-autoplay="false" aria-label="media" role="group">
+    <a class="visually-hidden skip-to-text-link" href="#story-continues-10">Continue reading the main story</a>
+    <span class="visually-hidden">Video</span>
+    <div class="image">
+        <img src="<%= promo_image_url %>" />
+        <div class="media-action-overlay">
+            <i class="icon"></i>
+            <div class="media-meta">
+                <h5 class="kicker"><span class="kicker-label">Play Video</span><span class="pipe">|</span><span class="counter">0:30</span></h5>
+                <h4 class="headline"><%- headline %></h4>
+            </div>
+        </div><!-- close media-action-overlay -->
+    </div>
+    <figcaption class="caption">
+        <h4 class="headline"><%- headline %></h4>
+        <div class="summary-credit">
+            <p class="summary"><%- summary %></p>
+            <span class="credit video-credit" itemprop="copyrightHolder">
+                                                    <span class="visually-hidden">Publish Date </span>July 2, 2014.
+                            </span>
+            <span class="credit photo-credit" itemprop="copyrightHolder">
+                            </span>
+        </div>
+    </figcaption>
+</figure>

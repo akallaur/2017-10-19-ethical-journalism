@@ -1,0 +1,127 @@
+#!/usr/bin/env node
+
+var _ = require("underscore"),
+		cheerio = require("cheerio");
+
+var Article = function(html, options) {
+
+	this.inputHtml = html;
+
+	this.selector = "article > *";
+
+	this.sections = [];
+
+	this.paragraphs = [];
+
+	this.paragraphClass = function(num, text) { return "paragraph paragraph-" + (num + 1) };
+
+	this.headerClass = function(num, text) { return "section-header section-header-" + (num + 1) };
+
+	this.isHeader = function(paragraph) {
+		return ["h1","h2","h3","h4","h5","h6","h7"].indexOf(paragraph.$[0].name) > -1 || (paragraph.$.find('strong').length > 0 && paragraph.$.find('strong').text() == paragraph.$.text())
+	};
+
+	this.eachParagraph = function($element) { };
+
+	this.layout = false;
+
+	this.config = false;
+
+	this.html = function() { return this.$('article').html(); }
+
+	this.parse = function(html) {
+		var $ = cheerio.load('<article>' + html + '</article>'),
+				paragraphs = [],
+				sections = [],
+				section = { paragraphs: [] },
+				self = this,
+				paragraphCount = 0;
+
+		this.$ = $;
+
+		// use config.pages info to layout page
+		if (this.layout) {
+			if (!this.config) {
+				throw "Pass the `config` into the parser to use `layout`";
+			}
+			_.each(this.layout, function(page, name) {
+				if (page.position && page.position.match(/^paragraph/)) {
+		      page.position_type = 'contextual';
+		      page.position_value = +(page.position.match(/\d+/)[0]);
+		    }
+				var isContextual = page.position && page.position.match(/^paragraph/) && page.position_type == 'contextual',
+					isTop = page.position == 'top';
+				if (isContextual || isTop) {
+					// this needs to be replaced by a shared template output module
+					var output;
+				    page.templates = this.config.templates;
+				    page.data = this.config.data;
+				    if (this.config.templating == 'mustache') {
+				    	output = this.config.templates[page.name].render(page, this.config.templates);
+				    } else {
+				    	output = this.config.templates[page.name || name](page);
+				    }
+					if (isContextual) $("article > p").eq(page.position_value-1).after("\n" +output);
+					else if (isTop) $("article > p").eq(0).before(output + "\n");
+				}
+			}, this);
+		}
+
+		// parse paragraphs, add classes
+		$(this.selector).each(function(i) {
+			var $element = $(this),
+					text = $element.html();
+
+			if (this.name == "p") {
+				$element.addClass(self.paragraphClass(paragraphCount++, text));
+			}
+
+			self.eachParagraph($element);
+
+			paragraphs.push({
+				$: $element,
+				html: $.html(this),
+				text: text,
+				paragraphCount: paragraphCount
+			});
+
+		});
+
+		_.each(paragraphs, function(paragraph) {
+			var isHeader = self.isHeader(paragraph);
+
+			if (isHeader) {
+				sections.push(section);
+				paragraph.$.addClass(self.headerClass(sections.length, paragraph.text))
+				paragraph.html = $.html(paragraph.$);
+				section = {
+					header: paragraph,
+					paragraphs: []
+				};
+			}
+			section.paragraphs.push(paragraph)
+		})
+
+		sections.push(section);
+
+		_.each(sections, function(section) {
+			section.contents = _.pluck(section.paragraphs, "html").join("\n\n");
+		});
+
+		return {
+			sections: sections,
+			paragraphs: paragraphs
+		}
+	}
+
+	this.initialize = function() {
+		_.extend(this, this.parse(this.inputHtml));
+	}
+
+	_.extend(this, options);
+
+	this.initialize();
+
+}
+
+module.exports = Article;

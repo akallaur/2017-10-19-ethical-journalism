@@ -1,0 +1,23 @@
+<aside class="marginalia related-coverage-marginalia nocontent robots-nocontent" data-marginalia-type="sprinkled">
+    <a class="visually-hidden skip-to-text-link" href="#story-continues-2">Continue reading the main story</a>
+    <header>
+        <h2 class="module-heading">Related Coverage</h2>
+    </header>
+    <ul>
+        <% _.each(related, function(item) { %>
+        <li>
+            <article class="story theme-summary">
+                <a class="story-link" href="<%= item.url %>">
+                <div class="thumb">
+                    <img alt="<%= item.image_caption %>"
+                    src="<%= item.image_url %>">
+                    <div class="media-action-overlay"></div>
+                </div>
+                <h2 class="story-heading"><span class=
+                "story-heading-text"><%= item.headline %></span><time class="dateline" datetime=
+                "2013-06-01">JUNE 1, 2013</time></h2></a>
+            </article>
+        </li>
+        <% }) %>
+    </ul>
+</aside>

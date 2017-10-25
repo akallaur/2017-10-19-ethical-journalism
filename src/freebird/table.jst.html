@@ -1,0 +1,30 @@
+<% if (item.value.data == "test") {
+  data.test = [{a:"a",b:"b",c:"c"}, {a:"a",b:"b",c:"c"}, {a:"a",b:"b",c:"c"}];
+} %>
+
+<div class="g-table" style="<% if (item.value["asset-max-width"]) { %><%= "max-width: " + item.value["asset-max-width"] %><% } %>">
+  <% var keys = item.value["data-column"] ? item.value["data-column"].split(",") : Object.keys(data[item.value["data"]][0]) %>
+  <table>
+
+    <tr>
+      <% colnames = item.value["data-column-hed"] ? item.value["data-column-hed"].split(",") : [] %>
+      <% _.each(keys, function(col,i){ %>
+        <% if (colnames.length > 0 && colnames[i]) { %>
+          <th><p><b><%= colnames[i] %></b></p></th>
+        <% } else { %>
+          <th><p><b><%= col %></b></p></th>
+        <% } %>
+      <% }) %>
+    </tr>
+
+    <% _.each(data[item.value["data"]], function(d, tr_index){ %>
+    <tr class="g-table-<%= item.value.data %>-tr-<%= tr_index+1 %>">
+      <% _.each(keys, function(col, td_index){ %>
+        <td class="g-table-<%= item.value.data %>-td-<%= td_index+1 %>" style="<% if (item.value["data-column-width-pct"]) { %>width: <%= item.value["data-column-width-pct"].split(",")[td_index] + '%' %><% } %>"><p><%= d[col] %></p></td> 
+      <% }) %>
+    </tr>
+    <% }) %>
+  </table>
+
+  <%= templates["freebird/caption"]({item:item, templates: templates}) %>
+</div>

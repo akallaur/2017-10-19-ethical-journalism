@@ -1,0 +1,22 @@
+<div class="g-item-ai2html" style="<% if (item.value['asset-max-width']) { %>max-width:<%= item.value['asset-max-width'] %><% if (item.value['asset-max-width'].indexOf('px') == -1) { print("px") } %>;<% } %>">
+
+<% if (item.value.hed) { %>
+  <p class="g-asset-hed"><%= item.value.hed %></p>
+<% } %>
+
+<% if (item.value['g-map-key']) { %>
+  <div class="g-map-key">
+    <% _.each(item.value['g-map-key'], function(key) { %>
+      <div class="g-key-row <% if (!key.type && !key.color) { print('g-key-row-title') } %>"><span class="g-key-<%= key.type %>" style="<% if (key.stroke) { print("border: 1px solid " + key.stroke + ";") } %><% if (key.color) { print("background-color:" + key.color + ";") } %><% if (key.type == "custom") { print('background-image:url(_assets/' + key['image-link'] + ');') } %>"></span><p><%= key.text %></p></div>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (templates[item.value.asset]) {
+    print(templates[item.value.asset]({data: data, value: item.value, templates: templates}));
+} else {
+    print('<div style="color:red; border:1px solid red; padding: 3em; text-align:center;">TEMPLATE NOT FOUND: '+item.value.asset+'</div>');
+} %> 
+
+<%= templates["freebird/caption"]({item:item, templates: templates}) %>
+</div>

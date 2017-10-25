@@ -1,0 +1,68 @@
+<%
+  var scoop_slug = scoop_slug || '';
+  var min_width = min_width || '';
+  var max_width = max_width || '';
+  var minimum_width_class = minimum_width_class || getClassSize(min_width, 'min') || '';
+  var maximum_width_class = maximum_width_class || getClassSize(max_width, 'max') || '';
+  var headline = headline || '';
+  var leadin = leadin || '';
+  var html = html || '';
+  var display_date = display_date || '';
+  var credit = credit || '';
+  var sources = sources || '';
+  var notes = notes || '';
+  var url = url || '';
+  var display_for_promotion_only = (display_for_promotion_only == undefined) ? false : display_for_promotion_only;
+  var lede = lede || false;
+
+  function getClassSize(num, type) {
+    var classByWidth = {
+      180: "xsmall",
+      300: "small",
+      600: "sub-medium",
+      720: "medium",
+      945: "large",
+      1050: "xlarge"
+    };
+    var prefix = (type == 'min') ? 'limit-' : 'layout-';
+    var size;
+    if (!num && type == 'min') {
+      size = "xsmall";
+    } else if (!num) {
+      size = "xlarge";
+    } else if (num) {
+      size = classByWidth[num];
+    }
+    return prefix + size;
+  }
+%>
+
+<figure id="<%= scoop_slug %>" class="interactive has-adjacency has-lede-adjacency <%= minimum_width_class %> <%= maximum_width_class %> <%= lede ? 'lede' : '' %>">
+
+  <a class="visually-hidden skip-to-text-link" href="#story-continues-7">Continue reading the main story</a>
+
+  <figcaption class="interactive-caption">
+    <% if (url) { %><a href="<%= url %>"><%} %>
+    <% if (!display_for_promotion_only) { %>
+      <h2 class="interactive-headline"><%= headline %></h2>
+    <% } %>
+    <% if (url) { %></a><%} %>
+    <p class="interactive-leadin"><%= leadin %></p>
+  </figcaption>
+
+  <div class="interactive-graphic"><%= html %></div>
+
+  <div class="footer">
+    <div class="interactive-credit">
+      <p class="byline-dateline"><time class="dateline" datetime="2014-06-30"><%= display_date %></time></p>
+      <%= credit %>
+    </div>
+    <div class="interactive-source">
+      <%= sources %>
+    </div>
+    <div class="interactive-notes">
+      <%= notes %>
+    </div>
+  </div>
+
+</figure>

@@ -1,0 +1,14 @@
+.g-lazy{
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.g-lazy.ll-init {
+  transition: opacity 0.3s ease-out;
+  opacity: 0;
+}
+
+.g-lazy.ll-loaded {
+  opacity: 1;
+}

@@ -1,0 +1,26 @@
+<div class="g-column-container">
+  <% _.each(item.value, function(a) { %>
+    <div class="g-column-col" style="width: calc(<%= 100 / item.value.length %>% - 20px);"> 
+      <% if (a.asset) { %>
+        <div class="g-column-asset">
+          <% if (templates[a.asset]) {
+              print(templates[a.asset]({data: data, templates: templates}));
+          } else {
+              print('<div style="color:red; border:1px solid red; padding: 3em; text-align:center;">TEMPLATE NOT FOUND: '+a.asset+'</div>');
+          } %>
+        </div>
+      <% } %>
+      <% if (a.image) { %>
+        <div class="g-column-image">
+          <%= templates['freebird/image-fragment']({
+            data: data,
+            src: a.image,
+            lazy: data.doc['use-lazy'] === 'yes' || data.doc['use-lazy'] === true || data.doc['use-lazy'] === 'true' || a['lazy-load-image'] === 'yes' || a['lazy-load-image'] === true || a['lazy-load-image'] === 'true'
+          }) %>
+        </div>
+      <% } %>
+      <p class="g-column-hed <%if (typeof a.hed == "object") { %><%= Object.keys(a.hed)[0] %><% } %>"><%if (typeof a.hed == "object") { %><%= a.hed[Object.keys(a.hed)[0]] %><% } else { %><%= a.hed %><% } %></p>
+      <p class="g-column-text <%if (typeof a.hed == "object") { %><%= Object.keys(a.text)[0] %><% } %>"><%if (typeof a.text == "object") { %><%= a.text[Object.keys(a.text)[0]] %><% } else { %><%= a.text %><% } %></p>
+    </div>
+  <% }) %>
+</div>

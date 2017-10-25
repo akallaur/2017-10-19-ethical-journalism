@@ -1,0 +1,9 @@
+*.ai binary
+*.eps binary
+page-templates/* binary
+public/index.html merge=ours
+data/doc.json merge=ours
+build/style.css merge=ours
+build/templates.js merge=ours
+public/_assets/build.js merge=ours
+

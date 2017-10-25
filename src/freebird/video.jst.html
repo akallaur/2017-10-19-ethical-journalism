@@ -1,0 +1,32 @@
+<div class="g-item-video" style="max-width:<% if (item.value['asset-max-width']) { %><%= item.value['asset-max-width'] %><% if (item.value['asset-max-width'].indexOf('px') == -1) { print("px") } %><% } %>">
+
+    <% var videoID = item.value.id || item.value['videotape-url'].split("/")[item.value['videotape-url'].split("/").length - 1].split(".")[0]; %>
+    <% var options = !!item.value.vhs && JSON.stringify(item.value.vhs).replace("'", "’"); %>
+
+    <% if (item.value.hed) { %>
+    <p class="g-asset-hed"><%= item.value.hed %></p>
+    <% } %>
+
+    <% if (item.value.type == "scoop-video") { %>
+    <!-- scoop videos -->
+    <div class="g-scoop-vhs" id="<%= item.value.id %>" data-options='<%= options %>'></div>
+    <% } %>
+
+    <% if (item.value.type == "videotape") { %>
+    <!-- videotape uploads -->
+    <div class="g-videotape-vhs" id="<%= videoID %>" data-videotape-url="<%= item.value['videotape-url'] %>" data-options='<%= options %>'></div>
+    <% } %>
+
+    <% if (item.value.type == "videotape-autoplay") { %>
+    <!-- videotape uploads -->
+    <div class="g-videotape-vhs" id="<%= videoID %>" data-videotape-url="<%= item.value['videotape-url'] %>" data-autoplay="true" data-options='<%= options %>'></div>
+    <% } %>
+
+    <% if (item.value.type == "youtube") { %>
+    <!-- youtube videos -->
+    <iframe width="100%" height="400" src="https://www.youtube.com/embed/<%= videoID %><% if (item.value['start']) { print('?start=' + item.value['start']) } %><% if (item.value['end']) { print('&end=' + item.value['end']) } %>" frameborder="0" allowfullscreen></iframe>
+    <% } %>
+
+    <%= templates["freebird/caption"]({item:item, templates: templates}) %>
+
+</div>

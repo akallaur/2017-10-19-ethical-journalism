@@ -1,0 +1,7 @@
+<% if (item.value.caption || item.value.credit || item.value.source) { %>
+<div class="g-asset-source">
+  <% if (item.value['caption']) { %><span class="g-caption"><%= item.value['caption'] %></span><% } %>
+  <% if (item.value['credit']) { %><span class="g-credit"><%= item.value['credit'] %></span><% } %>
+  <% if (item.value['source']) { %><% if (item.value['credit'] && item.value['source']) { %><span class='g-pipe'>&#124;</span><% } %><span class="g-credit"><%= item.value['source'] %></span><% } %>
+</div>
+<% } %>

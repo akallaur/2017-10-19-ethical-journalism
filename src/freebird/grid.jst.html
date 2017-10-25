@@ -1,0 +1,19 @@
+<% _.each(item.value, function(a){ %>
+  <% var row = item.className.replace("row", "") %>
+  <div class="g-grid-item" style="width: calc(<%= 100/row %>% - 5px);">
+    <% if (a.image) { %>
+      <%= templates['freebird/image-fragment']({
+        data: data,
+        src: a.image,
+        alt: item.value.asset || '',
+        lazy: data.doc['use-lazy'] === 'yes' || data.doc['use-lazy'] === true || data.doc['use-lazy'] === 'true' || item.value['lazy-load-image'] === 'yes' || item.value['lazy-load-image'] === true || item.value['lazy-load-image'] === 'true'
+      }) %>
+    <% } %>
+    <% if (a.asset) { %>
+      <img src="_assets/<%= a.image %>">
+    <% } %>
+    <% if (a.text) { %>
+      <p><%= a.text %></p>
+    <% } %>
+  </div>
+<% }) %>

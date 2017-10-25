@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+/* globals __dirname, process */
+var fs = require('fs');
+var path = require('path');
+var queue = require('queue-async');
+var execSync = require('child_process').execSync;
+var nsg = require('node-sprite-generator');
+var tmpDir = path.join(__dirname, '../tmp/');
+var q = queue();
+
+
+// check if native commands exist
+function checkSystemDependency(app){
+  var appFound = true;
+
+  try{
+    execSync('type ' + app, {stdio: 'pipe' });
+  } catch(e){
+    appFound = false;
+  }
+  return appFound;
+}
+
+var hasImageMagick = checkSystemDependency('convert');
+
+function makeSprite(retina, callback){
+  retina = retina || false;
+  nsg({
+    src: [path.join(__dirname, '../assets/sprite/') + '*.png'],
+    spritePath: retina ? path.join(__dirname, '../public/_assets/sprite@2x.png') : path.join(__dirname, '../public/_assets/sprite.png'),
+    stylesheet: 'css',
+    stylesheetOptions: {
+      prefix: retina ? 'g-retina .g-icon' : 'g-icon',
+      spritePath: retina ? '_assets/sprite@2x.png' : '_assets/sprite.png',
+      pixelRatio: retina ? 2 : 1,
+      nameMapping: function(fileName){
+        var ext = path.extname(path.basename(fileName));
+        return '.g-icon-' + path.basename(fileName, ext);
+      },
+    },
+    compositor: hasImageMagick ? 'gm' : 'jimp', // if no imagemagick, fallback to slower JS module
+    layoutOptions: {
+      scaling: retina ? 1 : 0.5
+    },
+    stylesheetPath: retina ? tmpDir + 'sprite-standard.css' : tmpDir + 'sprite-retina.css' // write to tmp location. later, we'll concat manually
+  }, function (error) {
+    if (error) throw error;
+    callback();
+  });
+}
+
+
+
+q.defer(makeSprite, false);
+q.defer(makeSprite, true);
+q.await(function(error) {
+  if (error) throw error;
+  var cssPath = path.join(__dirname, '../src/style-sprite.css');
+  var css = '\n.g-icon {display: inline-block;}\n';
+  [tmpDir + 'sprite-standard.css', tmpDir + 'sprite-retina.css'].forEach(function(cssPath){
+    css = css + fs.readFileSync(cssPath, 'utf8');
+    fs.unlinkSync(cssPath);
+  });
+  fs.writeFileSync(cssPath, css);
+  console.log('Sprite sheet generated:', cssPath);
+});

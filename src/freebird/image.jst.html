@@ -1,0 +1,27 @@
+<div class="g-item-image" style="max-width:<% if (item.value['asset-max-width']) { %><%= item.value['asset-max-width'] %><% if (item.value['asset-max-width'].indexOf('px') == -1) { print("px") } %><% } %>">
+
+  <% if (item.value.hed) { %>
+    <p class="g-asset-hed"><%= item.value.hed %></p>
+  <% } %>
+
+  <% 
+  var scoopurl;
+  if (data[item.value.asset] && item.type == "scoop-image") {
+    if (item.value["scoop-image-rendition"]) {
+      scoopurl = data[item.value.asset].result.image.image_crops["scoop-image-rendition"].url;
+    } else {
+      scoopurl = data[item.value.asset].result.image.image_crops.master1050.url;
+    }
+  }
+  %>
+
+  <%= templates['freebird/image-fragment']({
+    data: data,
+    src: (scoopurl) ? scoopurl : item.value.asset,
+    alt: item.value.asset || '',
+    lazy: data.doc['use-lazy'] === 'yes' || data.doc['use-lazy'] === true || data.doc['use-lazy'] === 'true' || item.value['lazy-load-image'] === 'yes' || item.value['lazy-load-image'] === true || item.value['lazy-load-image'] === 'true'
+  }) %>
+
+  <%= templates["freebird/caption"]({item:item, templates: templates}) %>
+
+</div>

@@ -1,0 +1,35 @@
+/*
+  Interactive Centered Headline
+  ===================== */
+
+.story.theme-interactive .story-meta .interactive-headline,
+.story.theme-interactive .story-meta .story-meta-footer {
+  text-align: center;
+  /* optional max width container */
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.story.theme-interactive .story-meta .byline-dateline {
+  margin-right: 0;
+}
+
+.story.theme-interactive .story-header .story-meta .byline+.dateline {
+  display: inline-block;
+}
+
+
+/*
+  Embedded Interactive Centered Headline
+  Insert scoop slug in place of scoop-slug-here to center
+  ===================== */
+
+/*
+#scoop-slug-here .interactive-caption {
+  text-align: center;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+*/

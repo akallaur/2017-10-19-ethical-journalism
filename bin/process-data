@@ -1,0 +1,241 @@
+#!/usr/bin/env node
+
+var _ = require("underscore"),
+    fs = require("fs"),
+    rewriteYML = require("../lib/rewrite-yml"),
+    papi = require("papi-client");
+
+function process(data, config, templates) {
+  // Loop through your data:
+
+  // _.each(data.rows, function(row) {
+  //  row.headline = "My New Headline";
+  // });
+
+
+  // Get HTML from your templates:
+
+  // var html = templates['ai2html-map']({ data: data, templates: templates });
+
+
+  // Parse articles:
+
+  // var ArticleParser = require("./../lib/article-parser"),
+  //     name = "article",
+  //     options = config.article[name],
+  //     body = options.source === 'local' ? templates[options.content]() : data[name].result.article.body;
+
+  // data.article = new ArticleParser(body, {
+  //   layout: config.article[name].pages,
+  //   config: config
+  // });
+
+
+  // Image data for images in assets/images
+  // Requires: 'make install' for dependencies and 'make images' to generate data.
+
+  // _.each(data.imagedata, function(image){
+  //   console.log(image.slug, image.ratio, image.extension, image.sizes);
+  //   console.log(templates['nyt5/laziestloader-image'](image));
+  // });
+
+
+  // Fixing doc keys to be lowercase
+  _.each(data.doc, function(item, key){
+    new_key = key.charAt(0).toLowerCase() + key.slice(1);
+    if (new_key != key) {
+      data.doc[new_key] = data.doc[key];
+      delete data.doc[key];
+    }
+
+    if (key == "yml") {
+      _.each(item.pages, function(page, page_key) {
+        _.each(page, function(page_item, page_item_key){
+          new_key = page_item_key.charAt(0).toLowerCase() + page_item_key.slice(1);
+          if (new_key != page_item_key) {
+            data.doc[key].pages[page_key][new_key] = page_item;
+            delete data.doc[key].pages[page_key][page_item_key];
+          }
+        });
+      });
+    }
+  });
+
+  // Rewrite YML based on Google Doc or spreadsheet
+  if (data.doc !== undefined && data.doc['overwrite-config-yml'] && data.doc['overwrite-config-yml'].match(/^(y|yes|true)$/)) {
+
+    // if the body contains a draft make a copy and filter it out
+    if (data.doc.body && data.doc.body.some(function(d){ return d.type == 'draft' })) {
+      data.doc.draft = data.doc.body
+
+      // filter out draft sections
+      var inDraft = false
+      data.doc.body = data.doc.body.filter(function(d){
+        if (d.type == 'draft'){
+          if (d.value == 'start') inDraft = true
+          if (d.value == 'end')   inDraft = false            
+        }
+
+        return !inDraft && d.type != 'draft'
+      })
+
+      // make a copy of yml.pages.index without scoop keys
+      data.doc.yml.pages.draft = {}
+      _.keys(data.doc.yml.pages.index).forEach(function(key){
+        if (!~key.indexOf('scoop')){
+          data.doc.yml.pages.draft[key] = data.doc.yml.pages.index[key]
+        }
+      })
+
+      // use index.jst.html template w/ doc.draft
+      templates.draft = function(obj){
+        var doc = obj.data.doc
+        var body = doc.body
+
+        doc.body = doc.draft
+        var rv = templates.index(obj)
+        doc.body = body
+
+        return rv
+      }
+    }
+
+
+    var file = "doc",
+        yml = fs.readFileSync('config.yml', 'utf-8');
+
+    var newYML = rewriteYML(yml, data[file]);
+    if (newYML) fs.writeFileSync('config.yml', newYML);
+
+  }
+
+  // Parse Scoop tags:
+
+  // data.article.result.article.body = data.article.result.article.body.replace(/customspan/g, "span");
+  // data.article.result.article.body = data.article.result.article.body.replace(/<!--graphic: (.*?)-->/g, function(match, name) {
+  //   // Replace embeds here
+  //   return "<figure id='" + name + "'></figure>";
+  // });
+
+
+  // add class names and ids for freeform template
+  // Bail if no type is defined.
+  if (data.doc !== undefined && data.doc.body !== undefined) {
+    _.each(data.doc.body, function(item) {
+      if (!item.type) return;
+      if (item.type.indexOf(".") > -1 || item.type.indexOf(".") > -1) {
+        var split;
+        if (item.type.indexOf(".") > -1) {
+          split = item.type.split(".");
+        } else if (item.type.indexOf("#") > -1) {
+          split = item.type.split("#");
+        }
+        item.type = split[0];
+        item.className = split[1];
+      }
+
+      // Fixing keys in freebirds to be lowercase
+      item.type = item.type.charAt(0).toLowerCase() + item.type.slice(1);
+
+    });
+  }
+
+  // Fixing keys in stacks to be lowercase
+  if (data.doc !== undefined && data.doc.sections !== undefined) {
+    _.each(data.doc.sections, function(section, idx){
+      _.each(section, function(item, key){
+        new_key = key.charAt(0).toLowerCase() + key.slice(1);
+
+        if (new_key != key) {
+          data.doc.sections[idx][new_key] = item;
+          delete data.doc.sections[idx][key];
+        }
+      });
+    });
+  }
+
+  // Adding chartmaker and mapmaker assets automatically
+  function addAssetToYml(asset_name, url) {
+    fs.access("src/" + asset_name + ".html", fs.F_OK, function(err){
+      if (err) {
+        var yml = fs.readFileSync('config.yml', 'utf-8').split("\n");
+        asset_line = yml.indexOf("# CHARTMAKER AND MAPMAKER");
+        yml[asset_line+2] = yml[asset_line+2].replace("# ", "");
+
+        if (yml[asset_line+3] == "#   - http://chartmaker.stg.nytimes.com/####") {
+          yml.splice(asset_line+3, 1);
+        }
+
+        for (i = asset_line; i < yml.length; i++) {
+          if (yml[i] === "") {
+            asset_line_end = i;
+            break;
+          }
+        }
+
+        yml.splice(asset_line_end, 0, "  - " + url);
+
+        var newYML = yml.join("\n");
+        if (newYML) fs.writeFileSync('config.yml', newYML);
+
+      }
+    });
+  }
+
+  // add chartmaker and mapmaker to stack
+  if (data.doc !== undefined && data.doc.sections !== undefined) {
+    _.each(data.doc.sections, function(section, idx){
+      _.each(section, function(item, key){
+        // check if the asset is mapmaker or chartmaker,
+        if ((key == "asset" && item.indexOf("mapmaker.gp.newsdev") > -1) || (key == "asset" && item.indexOf("chartmaker.em.nytimes") > -1)) {
+          asset_name = item.indexOf("chartmaker.em.nytimes") > -1 ? "chartmaker-" + item.split("/")[item.split("/").length - 1] : item.split("/")[item.split("/").length - 1];
+
+          // check if the file exists already, if it doesnt, rewrite yml
+          addAssetToYml(asset_name, item);
+
+          // rename the asset without the url
+          data.doc.sections[idx][key] = asset_name;
+        }
+      });
+    });
+  }
+
+  // add chartmaker and mapmaker to freebird
+  if (data.doc !== undefined && data.doc.body !== undefined) {
+    _.each(data.doc.body, function(item, idx){
+      if ((item.type == "graphic" && item.value.asset.indexOf("chartmaker.em.nytimes") > -1) || (item.type == "graphic" && item.value.asset.indexOf("mapmaker.gp.newsdev") > -1)) {
+        asset_name = item.value.asset.indexOf("chartmaker.em.nytimes") > -1 ? "chartmaker-" + item.value.asset.split("/")[item.value.asset.split("/").length - 1] : asset_name = item.value.asset.split("/")[item.value.asset.split("/").length - 1];
+
+        // rewrite yml with asset urls
+        addAssetToYml(asset_name, item.value.asset);
+
+        // rename the asset without the url
+        data.doc.body[idx].value.asset = asset_name;
+      }
+    });
+  }
+
+  return data;
+}
+
+function modifyPAPI(assetName, asset) {
+
+  // Change PAPI data, per asset, for live templates here:
+
+  // var papi = require('papi-client');
+
+  // if (assetName == 'index') {
+  //   asset.result.headline = "My Modified Headline";
+  // }
+
+  // if (assetName == 'article') {
+  //   asset.result.headline = "My Modified Headline";
+  // }
+
+  return asset;
+}
+
+module.exports = {
+  process: process,
+  modifyPAPI: modifyPAPI
+};

@@ -1,0 +1,12 @@
+<%
+  var class_name = class_name || 'g-lazy';
+  var sizes = sizes;
+  var pattern = pattern || "_big_assets/images/" + slug + "-{{size}}." + extension;
+  var ratio = ratio || false;
+%>
+<img class="<%= class_name %>"
+  src="https://static01.nyt.com/packages/flash/multimedia/ICONS/transparent.png"
+  data-pattern="<%= pattern %>"
+  <% if (ratio) { %>data-ratio="<%= ratio %>"<% } %> 
+  data-widths="<%= JSON.stringify(sizes) %>" 
+  >

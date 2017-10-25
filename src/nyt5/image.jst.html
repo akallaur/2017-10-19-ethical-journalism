@@ -1,0 +1,66 @@
+<%
+  var scoop_id = scoop_id || '';
+  var layout_class = layout_class || '';
+  var ratio_class = ratio_class || '';
+  var css_classes = css_classes || '';
+  var src = src || '';
+  var mediaviewer_src = mediaviewer_src || '';
+  var caption = caption || '';
+  var credit = credit || '';
+  var img_attributes = img_attributes || '';
+  var caption = caption || '';
+  var credit = credit || '';
+  var width = width || '';
+  var height = height || '';
+  var data_ratio = data_ratio || '';
+  var data_pattern = data_pattern || '';
+  var data_widths = data_widths || '';
+  var lede = lede || false;
+%>
+
+<figure
+  id="media-<%= scoop_id %>"
+  class="media photo <%= lede ? 'lede' : 'embedded' %> has-adjacency <%= layout_class %> <%= ratio_class %> media-<%= scoop_id %> <%= css_classes %>"
+  data-media-action="modal"
+  itemprop="associatedMedia"
+  itemscope=""
+  itemid="<%= src %>"
+  itemtype="http://schema.org/ImageObject"
+  aria-label="media"
+  role="group">
+  <span class="visually-hidden">Photo</span>
+  <div class="image">
+    <img
+      src="<%= src %>"
+      alt=""
+      <% if (mediaviewer_src) { %>
+      class="media-viewer-candidate"
+      data-mediaviewer-src="<%- mediaviewer_src %>"
+      data-mediaviewer-caption="<%- caption %>"
+      data-mediaviewer-credit="<%- credit %>"
+      <% } %>
+      <% if (data_ratio) { %>
+      data-ratio="<%= data_ratio %>"
+      <% } %>
+      <% if (data_pattern) { %>
+      data-pattern="<%= data_pattern %>"
+      <% } %>
+      <% if (data_widths) { %>
+      data-widths="<%= data_widths %>"
+      <% } %>
+      itemprop="url"
+      itemid="<%= src %>">
+    <% if (mediaviewer_src) { %>
+      <div class="media-action-overlay"><i class="icon"></i></div>
+    <% } %>
+    <meta itemprop="height" content="<%= height %>">
+    <meta itemprop="width" content="<%= width %>">
+  </div>
+    <figcaption class="caption" itemprop="caption description">
+        <span class="caption-text"><%= caption %></span>
+        <span class="credit" itemprop="copyrightHolder">
+            <span class="visually-hidden">Credit</span>
+            <%= credit %>
+        </span>
+    </figcaption>
+</figure>

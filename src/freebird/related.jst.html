@@ -1,0 +1,102 @@
+<%
+	
+	var scoopID = get(data, ['index', 'result', 'data_id']) || '';
+	var pageAssets = _.toArray(get(data, ['index', 'result', 'regions', 'bottomLeft', 'modules', 0, 'modules']));
+
+	var containers = get(data, ['section', 'result', 'groupings', 'rank', 'containers']);
+	var highlights = _.findWhere(containers, { name: 'highlights' });
+	var sectionAssets = _.head(highlights ? _.pluck(highlights.relations, 'asset') : [], 5);
+	
+	var assets = _.chain(pageAssets.concat(sectionAssets))
+		.unique(false, function(d) { return d.data_id; })
+		.filter(function(d) { return d.data_id != scoopID; })
+		.head(5)
+		.value();
+
+	function get(obj, arr) {
+		return _.reduce(arr, function(o, idx) { return o && o[idx] ? o[idx] : null; }, obj);
+	}
+
+	// could be better
+	function formatDate(date) {
+		var months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+		if (!date) return '';
+
+		var datestring = date.replace(/\D+$/, '');
+		var d = new Date(datestring);
+
+		var day = d.getDate();
+		var month = d.getMonth();
+		var year = d.getFullYear();
+		
+		return _.isNaN(day * month * year) ? '' : months[month]+' '+day+', '+year;
+	}
+	
+%>
+
+<style>
+	#BottomAd.ad.bottom-ad {
+		display: none !important;
+	}
+	#related-coverage {
+		display: none !important;
+	}
+	#g-related-duplicate {
+		margin-top: -25px;
+	}
+	.related-coverage .menu .story .wide-thumb {
+		padding-left: 20px;
+		padding-bottom: 20px;
+	}
+	.viewport-small-20 .related-coverage .menu .story .wide-thumb {
+		padding: 0;
+	}
+	@media screen and (max-device-width: 767px), screen and (max-width: 767px) {
+		#g-related-duplicate {
+			margin-left: 15px;
+			margin-right: 15px;
+		}
+	}
+	@media screen and (max-device-width: 320px), screen and (max-width: 320px) {
+		#g-related-duplicate {
+			margin-left: 10px;
+			margin-right: 10px;
+		}
+		.related-coverage .menu .story .wide-thumb {
+			padding-left: 15px;
+			padding-bottom: 15px;
+			width: 40%;
+		}
+	}
+</style>
+
+<section id="g-related-duplicate" class="related-coverage nocontent robots-nocontent" style="opacity: 1;">
+	<div class="nocontent robots-nocontent">
+		<header>
+			 <h2 class="section-heading">More from The Upshot</h2>
+		</header>
+		<ul class="menu layout-horizontal theme-story">
+			<% _.each(assets, function(asset, i) { %>
+				<li>
+					<article class="story theme-summary ">
+						<a href="<%= asset.url %>" data-rref="">
+							<div class="wide-thumb">
+								<img src="<%= get(asset, ['promotional_media', 'image', 'image_crops', 'mediumThreeByTwo210', 'url']) || get(asset, ['promotional_media', 'promotional_media', 'image', 'image_crops', 'mediumThreeByTwo210', 'url']) %>">
+							</div>
+							<h2 class="story-heading"><%= asset.headline %></h2>
+							<time class="dateline" datetime=""><%= formatDate(asset.publication_iso_date) %></time>
+						</a>
+					</article>
+				</li>
+			<% }) %>
+		</ul>
+	</div>
+</section>
+
+<script type="text/javascript">
+
+	var container = document.querySelector('main#main');
+	var dupe = document.querySelector('#g-related-duplicate');
+	container.appendChild(dupe);
+
+</script>

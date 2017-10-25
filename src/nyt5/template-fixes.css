@@ -1,0 +1,95 @@
+/* Fix spacing at top of story */
+.has-top-ad .story.theme-interactive,
+.has-ribbon .story.theme-interactive {
+  margin-top: 10px;
+}
+
+/* Fix comments button margin */
+.story.theme-interactive .comments-button.theme-kicker {
+  margin-top: 0;
+}
+
+/* Get rid of border under intro and share tools on mobile */
+.page-interactive-default .story.theme-main .story-header {
+  border-bottom: none;
+}
+
+/* Pad out the kicker/sharetool space */
+.story.theme-interactive .story-meta .kicker {
+  margin-bottom: 22px;
+}
+
+.viewport-medium-10 .story.theme-interactive .story-meta .kicker {
+  margin-bottom: 24px;
+}
+
+/* Override the moving sharetools on mobile */
+.story.theme-interactive .story-header .story-meta .kicker-container .sharetools {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  width: auto;
+  margin-top: -6px;
+  float: right;
+  clear: none;
+}
+
+/* Maintain the proper space with the section name and kicker next to share tools */
+.story.theme-interactive .story-header .story-meta .interactive-kicker {
+  float: left;
+  width: 65%;
+  display: inline-block;
+}
+
+/* Gets rid of the extra space under the intro that puts too much space there in mobile and desktop */
+.page-interactive-default .story.theme-main .story-header {
+  margin-bottom: 0;
+}
+
+.page-interactive-default .story.theme-main .story-header .story-meta {
+  margin-bottom: 10px;
+}
+
+/*Fixes styling on share tools at bottom of minimal interactives*/
+.story.theme-minimal .sharetools.layout-horizontal{
+  width:auto;
+  margin-top:11px;
+}
+.story.theme-minimal .sharetools.layout-horizontal .sharetool {
+  display: inline-block;
+  border-top: 0;
+}
+.story.theme-minimal .sharetools.layout-horizontal .sharetool:first-child a {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
+}
+.story.theme-minimal .sharetools.layout-horizontal .sharetool a {
+  padding-left: 15px;
+  padding-right: 5px;
+  height: 20px;
+  border-left: 1px solid #e2e2e2;
+}
+.story.theme-minimal .sharetools.layout-horizontal .sharetool a:hover {
+  background-color: transparent;  
+}
+
+/* uncomment to fix related content and footer layout on max_width: 720 pages */
+/*
+.related-coverage {
+  max-width: 720px;
+}
+
+.viewport-medium-30 .page-footer nav ul,
+.viewport-medium-50 .page-footer nav ul {
+  margin-left: 28px;
+}
+
+.viewport-medium-30 .page-footer nav.last-nav {
+  float: none;
+}
+
+.viewport-medium-30 .page-footer nav.last-nav ul {
+  margin-left: 239px;
+}
+*/

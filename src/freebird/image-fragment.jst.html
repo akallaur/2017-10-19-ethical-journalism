@@ -1,0 +1,54 @@
+<%
+  var lazy = lazy || false;
+  var alt = alt || '';
+  var src = src || false;
+  var slug = slug || false;
+  var hasLocalImagePath = (src) ? !/^http(?:s*):\/\//.test(src) : false; // src is set, and does not begin with http or https
+  var imageElAttrs = [{alt: alt}];
+  var localFileName;
+  var localExt;
+  var imageData;
+
+  // construct image markup
+  if(lazy){
+  
+    // lazy image source: if no slug given, and 'src' is
+    // actually a local image, see if there is a 
+    // sized slug option. In short: asset/images/slug.jpg has
+    // priority over public/_assets/slug.jpg
+    if(!slug && hasLocalImagePath){
+      localFileName = src.split(/(\\|\/)/g).pop();
+      localExt = localFileName.split('.').pop();
+      slug = localFileName.replace('.' + localExt , '');
+    }
+
+    imageElAttrs.push({src: 'https://static01.nyt.com/packages/flash/multimedia/ICONS/transparent.png'});
+    imageElAttrs.push({class: 'g-freebird-lazy'});
+    imageData = (slug) ? _.findWhere(data.imagedata, {slug: slug}) : false;
+    
+    if(imageData){
+      imageElAttrs.push({'data-pattern': "_big_assets/images/" + imageData.slug + "-{{size}}." + imageData.extension});
+      imageElAttrs.push({'data-pattern-retina': "_big_assets/images/" + imageData.slug + "-{{size}}_x2." + imageData.extension});
+      imageElAttrs.push({'data-widths': JSON.stringify(imageData.sizes)});
+      imageElAttrs.push({'data-ratio': JSON.stringify(imageData.ratio)});
+    } else {
+      imageElAttrs.push({'data-src': hasLocalImagePath ? '_assets/' + src : src});
+    }
+    
+  } else {
+    imageElAttrs.push({src: hasLocalImagePath ? '_assets/' + src : src});
+  }
+
+
+  var el = (function(){
+    var el = '';
+    imageElAttrs.forEach(function(attr){
+      _.each(attr, function(v,k){
+        el = el + ' ' + k + '="'+v+'"';
+      });
+    });
+    return '<img ' + el + '>';
+  })();
+%>
+
+<%= el %>

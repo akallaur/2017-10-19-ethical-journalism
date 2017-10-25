@@ -1,0 +1,31 @@
+<%
+  var scoop_slug = scoop_slug || '';
+  var headline = headline || '';
+  var summary = summary || '';
+  var kicker = kicker || '';
+  var url = url || '';
+  var promo_image_url = promo_image_url || '';
+  var display_size = (display_size && display_size.toLowerCase()) || false;
+%>
+
+<figure id="<%= scoop_slug %>" class="interactive promo has-adjacency layout-<%= display_size %>">
+    <a class="visually-hidden skip-to-text-link" href="#story-continues-3">Continue reading the main story</a>
+    <a href="<%= url %>">
+        <div class="interactive-image-container">
+            <div class="interactive-image">
+                <img src="<%= promo_image_url %>">
+            </div>
+            <div class="interactive-overlay">
+                <i class="interactive-overlay-icon"></i>
+                <span class="interactive-overlay-text">OPEN</span>
+            </div>
+        </div>
+        <% if (display_size != 'small') { %>
+        <h3 class="interactive-kicker"><%= kicker %></h3>
+        <% } %>
+        <h2 class="interactive-headline"><%= headline %></h2>
+        <% if (display_size != 'small') { %>
+        <p class="interactive-summary"><%= summary %></p>
+        <% } %>
+    </a>
+</figure>

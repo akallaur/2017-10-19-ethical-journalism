@@ -1,0 +1,503 @@
+#!/usr/bin/env node
+var _ = require("underscore"),
+    fs = require("fs"),
+    path = require("path"),
+    hogan = null,
+    argv = require("optimist").argv,
+    yaml = require("js-yaml"),
+    queue = require("queue-async"),
+    isBinaryFile = require('isbinaryfile'),
+    controller = require("./process-data"),
+    autoprefix = require("./../lib/css-prefixer"),
+    rewriteAssets = require("./../lib/rewrite-assets"),
+    getDownloadConfig = require("../lib/get-download-config");
+
+var config = yaml.load(fs.readFileSync(path.join(__dirname, "../config.yml"), "utf-8")),
+    warning = fs.readFileSync('lib/src/warning.html', 'utf-8'),
+    srcDir = 'src',
+    dataDir = 'data',
+    jstDir = 'jst',
+    jstFile = 'build/templates.js',
+    source = path.basename(argv.o, '.html') || "index",
+    downloadAll = argv.download || false,
+    useProxy = config.use_proxy || argv['use-proxy'] || false;
+
+// override config.yml settings with environment variables
+if (process.env.PREVIEW_LOAD_DATA_MANUALLY){
+  config.load_data_manually = process.env.PREVIEW_LOAD_DATA_MANUALLY == 1
+}
+if (process.env.PREVIEW_LIVE_TEMPLATES){
+  config.live_templates = process.env.PREVIEW_LIVE_TEMPLATES == 1
+}
+
+parseConfig();
+parseArticle();
+
+queue(1)
+  .defer(downloadManifests)
+  .defer(loadData)
+  .defer(loadScoopImages)
+  .defer(loadPromos)
+  .defer(parseData)
+  .await(function(err, manifests, loadedData, scoopImages, promos, data)  {
+    if (err) return console.log(err);
+    getTemplates(function(err, templates) {
+      if (err) return console.log(err);
+      render(err, manifests, data, templates);
+    });
+  });
+
+function parseArticle(callback) {
+  // there's only one article, move it into the right position
+  if (config.article && config.article.content && !_.isObject(config.article.content)) {
+    config.article = { article: config.article };
+  }
+  _.each(config.article, function(article, articleName) {
+    article.name = articleName;
+    article.pages = article.pages || {};
+      if (String(article.content).match(/^[a-zA-z\-\_\/]*$/)) {
+      article.source = 'local';
+    } else {
+      if (downloadAll || !fs.existsSync('data/' + articleName + '.json')) {
+        config.papi = config.papi || {};
+        config.papi[articleName] = article;
+      }
+      article.source = 'papi';
+    }
+  });
+}
+
+function parseConfig() {
+  config.pages = config.pages || {};
+  if (source == "index") config.pages[source] = _.extend(config, config.pages[source]);
+  var page_templates = _.pluck(config.pages, 'page_template');
+  _.each(config.pages, function(page, name) {
+    page.name = name;
+    if (page.position && page.position.match(/^paragraph/)) {
+      page.position_type = 'contextual';
+      page.position_value = +(page.position.match(/\d+/)[0]);
+    }
+    if (page.display_style === 'minimal' && !_.contains(page_templates, "local:" + page.name) && config.live_templates) {
+      console.error("\nConfig.yml Error: For 'display_style: minimal' to work, use 'page_template: local:" + page.name + "'. Otherwise, use 'display_style: standard.'\n");
+      process.exit(1);
+    }
+  });
+}
+
+function downloadManifests(callback) {
+  if (_.isArray(config.external_assets) && !config.load_data_manually) {
+    // assuming an array of URLs...
+    var manifests = require("./../lib/manifests");
+    _.each(config.external_assets, manifests.addUrl);
+    manifests.download(callback);
+  } else {
+    return callback(null);
+  }
+}
+
+function loadData(callback) {
+  if (config.scoop && config.scoop.assets && downloadAll) {
+    config.papi = config.papi || {};
+    if (!_.isArray(config.scoop.assets)) console.warn("Warning: In config.yml, scoop.assets isn't an array");
+    _.each(config.scoop.assets, function(asset_id, name) {
+      var key = _.isArray(config.scoop.assets) ? asset_id : name;
+      config.papi[key] = {
+        environment: config.scoop.environment,
+        service: config.scoop.service,
+        content: asset_id
+      };
+    });
+  }
+  var shouldDownload = config.data_vault || config.google_spreadsheets || config.google_docs || config.data_urls || config.papi;
+  if (config.load_data_manually && !downloadAll) shouldDownload = false;
+  if (shouldDownload) {
+    if (useProxy) {
+      var request = require('request');
+      request({
+        method: 'PUT',
+        uri: 'http://newsdev.ec2.nytimes.com/preview/dataloader-proxy',
+        json: _.extend({ meta: true }, config)
+      }, function(e, r, body) {
+        if (e) return console.log('Error: ', e);
+        if (body.error) return console.log('Proxy returned error: ', body.error);
+        dataLoaded(e, body);
+      });
+    } else {
+      require("nytg-dataloader").load(_.extend({ meta: true }, getDownloadConfig(config)), dataLoaded);
+    }
+
+    function dataLoaded(err, results) {
+      if (err) return console.warn('Error while loading the data: ', err);
+      writeData(results);
+      loadEmbedded(results, callback);
+    }
+  } else {
+    if (config.load_data_manually) {
+      console.warn("Note: load_data_manually is set to true in config.yml. Run 'make download' if you need the latest data.");
+    }
+    callback(null);
+  }
+}
+
+// write out individual embedded files
+function loadEmbedded(data, callback) {
+  var articles = _.filter(config.article, function(article) { return article.embedded; });
+  if (config.article && articles.length > 0) {
+    var papi = require('papi-client');
+    _.each(articles, function(article) {
+      if (!data[article.name]) return;
+      var asset = papi.create(data[article.name].content),
+          assets = {};
+      _.each(asset.getAssets(), function(embed, id) {
+        assets[id] = { ext: 'json', content: { result: embed }};
+      });
+      writeData(assets);
+    });
+  }
+
+  callback(null);
+}
+
+
+function loadScoopImages(callback) {
+  fs.readFile("data/doc.json", "utf8", function (err, doc) {
+    if (!err) {
+      doc = JSON.parse(doc);
+
+      // Adding image assets to yml
+      function addImagesToYml(asset_id) {
+        var yml = fs.readFileSync(path.join(__dirname, "../config.yml"), "utf-8").split("\n");
+        asset_line = yml.indexOf("# SCOOP IMAGES");
+        yml[asset_line+1] = yml[asset_line+1].replace("# ", "");
+
+        if (yml[asset_line+2] == "#   - 100000003182219") {
+          yml.splice(asset_line+2, 1);
+        }
+
+        for (i = asset_line; i < yml.length; i++) {
+          if (yml[i] === "") {
+            asset_line_end = i;
+            break;
+          }
+        }
+        if (yml.indexOf("  - " + asset_id) == -1) {
+          yml.splice(asset_line_end, 0, "  - " + asset_id);
+        }
+
+        var newYML = yml.join("\n");
+        if (newYML) fs.writeFileSync(path.join(__dirname, "../config.yml"), newYML);
+      }
+
+
+      // scoop image for stack
+      if (doc !== undefined && doc.sections !== undefined) {
+        // check if there is a scoop image in the data
+        _.each(doc.sections, function(section, idx){
+          _.each(section, function(item, key){
+            if (key == "scoop-image-id") {
+              addImagesToYml(item);
+            }
+          });
+        });
+      }
+
+      // scoop image for freebird
+      if (doc !== undefined && doc.body !== undefined) {
+        // check if there is a scoop image in the data
+        if (_.pluck(doc.body, "type").indexOf("scoop-image") > -1) {
+            _.each(doc.body, function(item, idx){
+              if (item.type == "scoop-image") {
+                addImagesToYml(item.value.asset);
+              }
+            });
+        }
+      }
+
+      // read in new config
+      new_config = yaml.load(fs.readFileSync(path.join(__dirname, "../config.yml"), "utf-8"));
+
+      // load scoop images
+      if (new_config.scoop_images) {
+        var images = new_config.scoop_images;
+        var papi = require('papi-client');
+
+        var tasks = queue();
+
+
+        _.each(images, function(image, idx) {
+
+          tasks.defer(loadImage, image);
+          tasks.await(function(error){
+            if (error) {
+              callback(error);
+              return;
+            } else {
+              callback(null);
+            }
+          });
+
+          function loadImage(image, callback) {
+
+            fs.readFile("data/" + image + ".json", function (err, data) {
+              if (err) {
+                papi.load(+image, config, function(err, scoop) {
+                  if (scoop.status == "ERROR") {
+                    // return error if the image is not published yet
+                    console.log("ERROR: Scoop image is not published.");
+                    callback("ERROR: Scoop image is not published.");
+                  } else {
+                      fs.writeFileSync("data/" + image + ".json", JSON.stringify(scoop, null, 4));
+                      callback(null);
+                  }
+
+                });
+              } else {
+                callback(null);
+              }
+            });
+
+          }
+
+        });
+      } else {
+        callback(null);
+      }
+    } else {
+      callback(null);
+    }
+  });
+}
+
+function writeData(results) {
+  _.each(results, function(result, slug) {
+    var content = (result.ext === 'json') ? JSON.stringify(result.content, null, 4) : result.content;
+    fs.writeFileSync(path.join(dataDir, slug + "." + result.ext), content);
+  });
+}
+
+function parseData(callback) {
+  walk(dataDir, function(err, files) {
+    if (err) return callback(err);
+    var data = {},
+        tasks = queue();
+    files.forEach(function(file) {
+      var ext = path.extname(file),
+          name = path.basename(file, ext);
+      if (name !== "" && ext === ".json") {
+        tasks.defer(function(callback) {
+          fs.readFile(file, 'utf8', function(err, contents) {
+            var parsed;
+            try {
+              parsed = JSON.parse(contents);
+            } catch (e) {
+              // console.warn(e);
+              console.error('\n   '+e+' in data/'+name+ext);
+              console.error('\n   preview had problems parsing the file data/'+name+ext);
+              console.error('   To fix the problem, repair or delete the file\n');
+              process.exit(1);
+            }
+            callback(err, [name, parsed]);
+          });
+        });
+      }
+    });
+    tasks.awaitAll(function(err, results) {
+      _.each(results, function(result) {
+        data[result[0]] = result[1];
+      });
+      callback(err, data);
+    });
+  });
+}
+
+function getTemplates(callback) {
+  var templates = {},
+      mustache = {};
+  walk("src", function(err, files) {
+    var hasMustache = _.contains(_.map(files, getExtensions), ".mustache.html");
+    files.forEach(function(file) {
+      var relfile = path.relative("src", file),
+          name = removeFileExtension(relfile);
+      if (name in templates) console.log("\033[31mThere's another template file called `" + name + "`. Replacing it with src/" + relfile + "\033[0m");
+      if (isBinaryFile(file)) return;
+
+      var extension = getExtensions(relfile),
+          contents = fs.readFileSync(path.join(srcDir, relfile), "utf8");
+
+      if (extension == '.mustache.html') {
+        // mustache templating
+        hogan = hogan || require("hogan.js");
+        mustache[name] = hogan.compile(contents);
+        templates[name] = function(options) {
+          return mustache[name].render(options || {}, mustache);
+        };
+      } else if (extension == ".jst.html") {
+        // Underscore templating
+        try {
+          templates[name] = _.template(contents);
+        } catch(e) {
+          console.log("\nTemplate Error!");
+          console.log("Compiled source of " + name + ".jst.html:\n");
+          console.log(e.source);
+          eval(e.source);
+          throw e;
+        }
+      } else if (extension == ".md") {
+        // Markdown templating
+        contents = require('marked')(contents.replace(/\n+\s*/g, "\n\n"));
+        templates[name] = function() { return contents; };
+        if (hasMustache) mustache[name] = hogan.compile(templates[name]());
+      } else {
+        // HTML templating
+        templates[name] = function() { return contents; };
+        if (hasMustache) mustache[name] = hogan.compile(templates[name]());
+      }
+
+    });
+    // get build files
+    walk("build", function(error, files) {
+      _.each(files, function(file) {
+        var name = file.split('.')[0];
+        if (name in templates) throw new Error("template name collision: " + name);
+        if (isBinaryFile(file)) return;
+        var extension = getExtensions(file),
+            contents = fs.readFileSync(file, "utf-8");
+        templates[name] = function() { return contents; };
+      });
+      callback(err, templates);
+    }); // end walk build
+  }); // end walk src
+}
+
+function buildFrontendTemplates(templates) {
+  var jst = _.reduce(templates,function(memo, template, name) {
+    if (name.match(/^jst\//)) memo[name] = template;
+    return memo;
+  }, {});
+  if (_.isEmpty(jst)) return;
+  var str = "define(function() {\n\n" +
+            "var templates = {};\n\n" +
+            "templates['" + jstDir + "'] = {};\n\n" +
+            _.map(jst, function(template, name) {
+               var path = "['" + name.split("/").join("']['") + "']";
+               return "templates" + path + " = " +  template.source;
+            }) + "\n\n" +
+            "return templates;\n\n" +
+            "})";
+  if (!fs.existsSync('build')) fs.mkdirSync('build');
+  fs.writeFileSync(jstFile, str);
+}
+
+function render(err, manifests, data, templates) {
+
+  buildFrontendTemplates(templates);
+
+  config.templates = templates;
+  config.data = data;
+
+  config.data = controller.process(data, config, templates);
+
+  if (config.article) {
+    var livePreviews = require('../lib/live-previews'),
+        papi = livePreviews.writePageTemplates(config, downloadAll);
+  }
+
+  var page_templates = _.pluck(config.pages, 'page_template');
+
+  _.each(config.pages, function(page) {
+    if (!templates || !templates[page.name]) return;
+    page.templates = config.templates;
+    page.data = config.data;
+    page.autoprefix = autoprefix;
+    var output = templates[page.name](page);
+    write(page.name, warning + output);
+
+    // only generate interactive templates if needed
+    if (!_.contains(page_templates, "local:" + page.name ) || !config.live_templates) return;
+
+
+    var interactive = require('papi-client').create("interactivegraphics").addConfig(page),
+        templateFile = 'page-templates/' + page.name + '.html';
+    if (controller.modifyPAPI) interactive = controller.modifyPAPI(page.name, interactive);
+    interactive.writeFile(templateFile, { filter: rewriteAssets });
+    // doesn't seem like we need to write the PAPI file for interactives
+    // fs.writeFile('data/' + page.name + '-papi.json', JSON.stringify(interactive.getData(), null, 4));
+  });
+
+}
+
+function write(name, content) {
+  var out = argv.o === "/dev/stdout" ?
+        process.stdout
+        : fs.createWriteStream('public/' + name + '.html');
+  out.write(content);
+}
+
+function walk(dir, done) {
+  var results = [];
+  fs.readdir(dir, function(err, list) {
+    if (err) return done(err);
+    var pending = list.length;
+    if (!pending) return done(null, results);
+    list.forEach(function(file) {
+      file = dir + '/' + file;
+      fs.stat(file, function(err, stat) {
+        if (stat && stat.isDirectory()) {
+          walk(file, function(err, res) {
+            results = results.concat(res);
+            if (!--pending) done(null, results);
+          });
+        } else {
+          results.push(file);
+          if (!--pending) done(null, results);
+        }
+      });
+    });
+  });
+}
+
+function getExtensions(basename) {
+  var extension = path.extname(basename);
+  return extension ? getExtensions(path.basename(basename, extension)) + extension : extension;
+}
+
+function removeFileExtension(path) {
+  var idx = path.search(/\.[^\/]+$/);
+  return idx > -1 ? path.substring(0, idx) : path;
+}
+
+
+function loadPromos(callback) {
+  fs.readdir(path.join(__dirname, "../public/promos"), function(err, filenames) {
+    if (err || filenames.length === 0) {
+      callback();
+    } else {
+      var files = [];
+      var tasks = queue();
+      filenames = _.filter(filenames, function(f) { return f != ".DS_Store"; });
+      _.each(filenames, function(d, i){
+        tasks.defer(loadFile, d, i);
+        tasks.await(function(error){
+          if (error) {
+            callback(error);
+            return;
+          } else {
+            callback(null);
+          }
+        });
+
+        function loadFile(d, i, callback) {
+          fs.stat(path.join(__dirname, "../public/promos/" + d), function(err, stat) {
+            files.push({
+              filename: d,
+              size: stat.size
+            });
+            files = _.sortBy(files, "size");
+            fs.writeFileSync(path.join(__dirname, "../data/promos.json"), JSON.stringify(files, null, 4));
+            callback(null);
+          });
+        }
+      });
+    }
+  });
+}

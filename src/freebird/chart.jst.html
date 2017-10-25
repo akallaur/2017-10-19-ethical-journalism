@@ -1,0 +1,104 @@
+<% 
+  if (item.value.data == "test") {
+    data.test = [{a:"1",b:"100","c": "150"}, {a:"2",b:"200", "c": "250"}, {a:"3",b:"300", "c": "350"}];
+  }
+
+  var keys = item.value["data-column"] ? item.value["data-column"].split(",") : Object.keys(data[item.value["data"]][0]);
+  if (item.value["data-column-hed"]) {var colnames = item.value["data-column-hed"].split(",");}
+  var num = keys.length - 1;
+  var maxPos = 0;
+  var maxNeg = 0;
+
+  _.each(data[item.value["data"]], function(d, index){
+    _.each(keys, function(col, index) {
+      if (index == 0) return;
+      if (!d["display-"+col]) {
+        d["display-"+col] = d[col].replace(/(\d)(?=(\d{3})+$)/g, '$1,');
+      }
+      d[col] = parseInt(d[col]);
+      if (d[col] > 0 && d[col] > maxPos) maxPos = d[col];
+      if (d[col] < 0 && Math.abs(d[col]) > maxNeg) maxNeg = d[col] * -1;
+    });
+  }); 
+
+  if (item.value["data-max-value"]) {
+    maxPos = maxPos > 0 ? item.value["data-max-value"] * 1 : maxPos;
+    maxNeg = maxNeg > 0 ? item.value["data-max-value"] * 1 : maxNeg;
+  } 
+  
+  var labelWidth = item.value["data-label-width"] ? item.value["data-label-width"].split(",")[0] : "100px";
+  var negWidth = (maxNeg / (maxPos + maxNeg) * 100) + "%";
+  var posWidth = (maxPos / (maxPos + maxNeg) * 100) + "%";
+
+  if (item.value["label-position"] && item.value["label-position"] == "outside") {
+    var width = item.value["data-label-width"].split(",").length > 1 ? item.value["data-label-width"].split(",")[1] : "50px";
+    negWidth = width;
+    posWidth = "calc(" + (maxPos / (maxPos + maxNeg) * 100) + "% - " + width + ")";
+  }
+%>
+
+<div class="g-chart g-chart-<%= item.value.data %>" style="<% if (item.value["asset-max-width"]) { %><%= "max-width: " + item.value["asset-max-width"] %><% } %>">
+
+  <% if (colnames) { %>
+    <div class="g-chart-header">
+      <% _.each(keys, function(col, index){ %>
+        <% if (index == 0) { %>
+          <div class="g-chart-label" style="width: <%= labelWidth %>"><%= colnames[index] %></div>
+        <% } else { %>
+          <div class="g-chart-label not-first" style="width: calc((100% - <%= labelWidth %>)/<%= num %> - 20px)">
+            <%= colnames[index] %>
+          </div>
+        <% } %>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% _.each(data[item.value["data"]], function(d, index){ %>
+    <div class="g-chart-row g-chart-row-<%= index %> <% if (item.value["row-class-column"] && d[item.value["row-class-column"]]) { %><%= d[item.value["row-class-column"]] %><% } %> <% if (item.value["label-position"]) { %><%= item.value["label-position"] %><% } %>">
+
+      <% _.each(keys, function(col, index){ %>
+
+        <% if (index == 0) { %>
+          <div class="g-chart-label" style="width: <%= labelWidth %>"><%= d[col] %></div>
+        <% } else { %>
+          <div class="g-chart-bar-container" style="width: calc((100% - <%= labelWidth %>)/<%= num %> - 20px)">
+
+            <div class="g-chart-bar-neg" style="width: <%= negWidth %>">
+              <% if (d[col] < 0) { %>
+                <div class="g-chart-bar" style=" width: <%= d[col] / maxNeg * -100 %>%;
+                  <% if (item.value["bar-color-column"] && d[item.value["bar-color-column"]]) { %>
+                    <%= "background: " + d[item.value["bar-color-column"]] %>
+                  <% } else if (item.value["default-bar-color"]) { %>
+                    <%= "background: " + item.value["default-bar-color"] %>
+                  <% } %>">
+                  <div class="g-chart-bar-label in-label"><%= d["display-"+col] %></div>
+                </div>
+              <% } else { %> 
+                <div class="g-chart-bar-label out-label"><%= d["display-"+col] %></div>
+              <% } %> 
+            </div>
+
+            <div class="g-chart-bar-pos" style="width: <%= posWidth %>">
+              <% if (d[col] > 0) { %>
+                <div class="g-chart-bar" style=" width: <%= d[col] / maxPos * 100 %>%;
+                  <% if (item.value["bar-color-column"] && d[item.value["bar-color-column"]]) { %>
+                    <%= "background: " + d[item.value["bar-color-column"]] %>
+                  <% } else if (item.value["default-bar-color"]) { %>
+                    <%= "background: " + item.value["default-bar-color"] %>
+                  <% } %>">
+                  <div class="g-chart-bar-label in-label"><%= d["display-"+col] %></div>
+                </div>
+              <% } else { %> 
+                <div class="g-chart-bar-label out-label"><%= d["display-"+col] %></div>
+              <% } %> 
+            </div>
+            
+          </div>
+        <% } %>
+          
+      <% }) %>
+    </div>
+  <% }) %>
+
+  <%= templates["freebird/caption"]({item:item, templates: templates}) %>
+</div>

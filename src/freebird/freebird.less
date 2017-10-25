@@ -1,0 +1,487 @@
+@story_header_size: 2.4rem;
+
+/* story top */
+.story.theme-main .story-header .story-meta {
+  .story-heading {
+    max-width: 720px;
+    margin: 0 auto 10px;
+    text-align: center;
+    line-height: @story_header_size * 1.185;
+    font-size: @story_header_size;
+
+    @media @viewport-max-945px {
+        line-height: @story_header_size * 1.185 * 0.9;
+        font-size: @story_header_size * 0.9;
+    }
+    @media @viewport-mobile {
+        line-height: @story_header_size * 1.185 * 0.8;
+        font-size: @story_header_size * 0.8;
+    }
+  }
+
+  .interactive-leadin.summary {
+    max-width: @text_width;
+    margin: 0 auto 20px auto;
+    text-align: left;
+    font-size: 17px;
+    line-height: 1.6;
+    .dateline {
+      text-align: center;
+      display: block;
+    }
+  }
+
+  .byline-dateline {
+    text-align: center;
+  }
+}
+
+.story.theme-main .story-footer .interactive-byline .byline-dateline .byline {
+  font-family: "nyt-franklin", arial, sans-serif;
+  font-weight: 500;
+}
+
+/* top asset */
+.g-top-asset {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+  img {
+    width: 100%;
+  }
+}
+
+/* body text */
+.g-body {
+  max-width: @text_width;
+  margin-left: auto;
+  margin-right: auto;
+  
+  .viewport-medium & {
+    font-size: 17px;
+    line-height: 1.6;    
+  }
+
+  b, strong {
+
+  }
+  a {
+    text-decoration: underline;
+  }
+}
+
+/* subhed */
+.g-subhed h2 {
+  max-width: @text_width;
+  margin: 2em auto 1em auto;
+  font: 700 1.2em/1.3em 'nyt-franklin',arial,sans-serif;
+  text-align: center;
+
+  .viewport-small-10 & {
+    font-size:1.5em;
+  }
+}
+
+/* refer text box */
+.g-refer {
+  max-width: @text_width;
+  margin: 0 auto 25px;
+  padding: 12px 15px;
+  box-sizing: border-box;
+  background: #fffcd9;
+
+  .g-body {
+    font-family: 'nyt-franklin',arial,sans-serif;
+    font-size: 16px;
+    line-height: 1.3;
+    margin-bottom: 0;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+}
+
+/* images */
+.g-item-image {
+  margin: 25px auto;
+  img {
+    width: 100%;
+  }
+}
+
+/* video */
+.g-item-video {
+  margin: 25px auto;
+}
+
+/* sources and credits */
+.g-asset-source {
+  padding-top: 3px;
+
+  .g-source {
+    font: 400 12px/15px 'nyt-franklin',arial,sans-serif;
+    color: #999;
+  }
+  .g-pipe {
+    margin: 0 6px 0 3px;
+    font: 400 12px/12px 'nyt-franklin',arial,sans-serif;
+    color: #999;
+  }
+  .g-caption {
+    font: 300 14px/17px georgia,'times new roman',times,serif;
+  }
+  .g-credit {
+    font: 400 12px/17px 'nyt-franklin',arial,sans-serif;
+    display: inline-block;
+    color: #999;
+  }
+}
+
+
+/* graphics */
+.g-item-ai2html {
+  margin: 25px auto;
+}
+
+p.g-asset-hed {
+  font: 700 16px/18px 'nyt-franklin',arial,sans-serif;
+  margin-bottom: 0;
+}
+
+.g-map-key {
+  float:none;
+  clear: both;
+  overflow:hidden;
+  margin: 10px auto 4px auto;
+
+  .g-key-row {
+    margin-bottom: 5px;
+    margin-right: 15px;
+    float:left;
+
+    .viewport-small & {
+      width: auto;
+      margin-bottom: 0;
+    }
+    .viewport-small-20 & {
+      width: auto;
+    }
+
+    .g-key-rect, .g-key-circle {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+      display: inline-block;
+    }
+
+    p {
+      font: 500 0.9em/1.6 'nyt-franklin',arial,sans-serif;
+      display: inline-block;
+      vertical-align: middle;
+      margin: 0;
+
+      .viewport-small & {
+        max-width: 92%;
+      }
+      .viewport-small-20 & {
+        width: auto;
+        max-width: none;
+      }
+    }
+
+    .g-key-rect {
+      width: 22px;
+      height: 10px;
+    }
+
+    .g-key-circle {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+
+    .g-key-custom {
+      width: 20px;
+      height: 20px;
+      background-size: 100%;
+      display: block;
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      margin: -4px 2px 0 0;
+    }
+
+  }
+
+  .g-key-row-title {
+    p {
+      .viewport-small & {
+        width: 100%;
+        max-width: none;
+      }
+     }
+  }
+}
+
+.g-red-dot, .g-black-dot {
+  display: inline-block;
+  background: #d00;
+  color: white;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  font: 700 14px/1.4 'nyt-franklin',arial,sans-serif;
+  text-align: center;
+  border-radius: 10px;
+  line-height: 20px;
+}
+
+.g-black-dot {
+  background: #222;
+}
+
+
+/* column text */
+.g-column-container {
+  max-width: @text_width;
+  margin: 20px auto 0 auto;
+
+  .viewport-medium & {
+    max-width: 1050px;
+  }
+
+  .viewport-large & {
+    margin-bottom: 30px;
+  }
+
+  .g-column-hed {
+    font-family: 'nyt-franklin',arial,sans-serif;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .g-column-col {
+    vertical-align: top;
+
+    .viewport-small & {
+      display:block;
+      min-width: 100%;
+    }
+    .viewport-medium & {
+      min-width: 0;
+      display:inline-block;
+      margin-right: 15px;
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+  .g-column-asset, .g-column-image {
+    margin-bottom: 8px;
+  }
+  .g-column-image img {
+    width: 100%;
+  }
+}
+
+
+/* tables */
+.g-table {
+  margin: 0 auto;
+  margin-bottom: 25px;
+  tr {
+    border-bottom: 1px solid #ececec;
+  }
+  p {
+    font: 500 14px/1.4'nyt-franklin',arial,sans-serif;
+    text-align: left;
+    margin: 6px 0;
+  }
+}
+
+/* charts */
+.g-chart {
+  margin: 0 auto;
+  margin-bottom: 25px;
+  font: 500 14px/1.4'nyt-franklin',arial,sans-serif;
+
+  .g-chart-header {
+    font-weight: bold;
+  }
+  .g-chart-row, .g-chart-header  {
+    clear: both;
+    height: 22px;
+    margin-bottom: 9px;
+  }
+  .g-chart-bar-container, .g-chart-label {
+    float: left;
+    height: 100%;
+  }
+  .g-chart-bar-container {
+    margin-left: 20px;
+  }
+  .g-chart-bar-pos, .g-chart-bar-neg {
+    height: 100%;
+    // outline: 1px solid black;
+    float: left;
+  }
+  .g-chart-label, .g-chart-bar {
+    padding-top: 3px;
+  }
+  .g-chart-label.not-first {
+    margin-left: 20px;
+  }
+  .g-chart-bar {
+    height: 100%;
+    background: lightsteelblue;
+    position: relative;
+  }
+  .g-chart-bar-label {
+    padding-left: 6px;
+  }
+  .g-chart-bar-neg {
+    .g-chart-bar {
+      float: right;
+    }
+    .g-chart-bar-label {
+      text-align: right;
+      padding-right: 6px;
+      padding-left: 0px;
+    }
+  }
+  .out-label {
+    padding-top: 3px;
+    display: none;
+  }
+  .outside {
+    .out-label {
+      display: block;
+    }
+    .in-label {
+      display: none;
+    }
+  }
+
+  .g-bold {
+    font-weight: bold;
+  }
+}
+
+/* grid */
+.g-grid {
+  margin-bottom: 15px;
+  .g-grid-item {
+    position: relative;
+    display: inline-block;
+    min-width: ~'calc(50% - 5px)';
+
+    .viewport-small-20 & {
+      min-width: ~'calc(33% - 5px)';
+    }
+    .viewport-medium & {
+      min-width: 0;
+    }
+    p {
+      font: 500 15px/1.4 'nyt-franklin', arial, sans-serif;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      color: #fff;
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* lazy images */
+.g-freebird-lazy{
+  display: block;
+  width: 100%;
+  height: auto;
+
+  &.ll-init {
+    transition: opacity 0.3s ease-out;
+    opacity: 0;
+  }
+
+  &.ll-loaded {
+    opacity: 1;
+  }
+}
+
+
+/* Mobile issues */
+
+/* Get rid of border under intro and share tools on mobile */
+.story-header.interactive-header {
+  border-bottom:none !important;
+}
+
+/* Share tools issues */
+
+/* Pad out the kicker/sharetool space */
+.story.theme-main .story-header .story-meta .kicker-container {
+  margin-bottom: 12px;
+}
+
+/* Override the moving sharetools on mobile */
+.story.theme-main .story-header .story-meta .kicker-container .sharetools {
+  position: relative;
+  float: right;
+  /*right: 0px;*/
+  bottom: auto;
+  left: auto;
+  width: auto;
+  margin-top: -6px;
+  clear: none;
+}
+
+/* Maintain the proper space with the section name and kicker next to share tools */
+.story.theme-main .story-header .story-meta .interactive-kicker {
+  float: left;
+  width: 70%;
+  display: inline-block;
+}
+
+// ad styles
+.g-graphic.g-graphic-freebird {
+  .g-ad-wrapper {
+    margin: 30px auto;
+    max-width: 1050px;
+    .viewport-medium & {
+      margin: 50px auto;
+    }
+
+    .ad {
+      border-top: 1px solid #e2e2e2 !important;
+      border-bottom: 1px solid #e2e2e2 !important;
+      margin: 0 auto;
+      padding: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+      div {
+        margin: 0 auto;
+        display: block !important;
+      }
+    }
+
+    iframe {
+      margin: 0 auto;
+      display: block;
+    }
+
+    .g-ad-text {
+      text-align: center;
+      font: 500 12px/1.2 "nyt-franklin", arial, sans-serif;
+      color: #bfbfbf;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+  }
+}
+
+.ad.top-ad {
+  border: none;
+  margin-left: auto;
+  margin-right: auto;
+}

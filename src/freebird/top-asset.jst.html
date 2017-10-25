@@ -1,0 +1,30 @@
+<div class="g-top-asset" style="<% if (data.doc['top-asset-max-width']) { %><%= 'max-width: ' + data.doc['top-asset-max-width'] + '; ' %><% } %>">
+
+  <% if (data.doc['top-asset'].indexOf(".jpg") == -1 && data.doc['top-asset'].indexOf(".png") == -1 && data.doc['top-asset'].indexOf(".gif") == -1) { %>
+    <% if (templates[data.doc['top-asset']]) { %>
+      <%= templates[data.doc['top-asset']]() %>
+    <% } else {
+      print('<div style="color:red; border:1px solid red; padding: 3em; text-align:center;">TEMPLATE NOT FOUND: '+data.doc["top-asset"]+'</div>');
+    } %>
+    
+  <% } else { %>
+    <%= templates['freebird/image-fragment']({
+      data: data,
+      src: data.doc['top-asset'],
+      lazy: (data.doc['use-lazy'] === 'yes' || data.doc['use-lazy'] === true || data.doc['use-lazy'] === 'true') ? true : false
+    }) %>
+  <% } %>
+
+</div>
+<header class="story-header interactive-header" id="header-duplicate">
+  <div class="story-meta"></div>
+</header>
+<script type="text/javascript">
+
+var header = document.querySelector('.story-header.interactive-header');
+    header2 = document.querySelector('#header-duplicate .story-meta');
+
+header2.appendChild(header.querySelector('.interactive-headline'));
+header2.appendChild(header.querySelector('.interactive-meta-footer'));
+
+</script>

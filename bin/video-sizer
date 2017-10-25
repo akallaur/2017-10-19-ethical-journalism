@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+var AssetsSizer = require("./../lib/assets-sizer");
+var sizer = new AssetsSizer('video');
+

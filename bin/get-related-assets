@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+var _ = require("underscore"),
+    fs = require("fs"),
+    path = require("path"),
+    argv = require("optimist").argv,
+    yaml = require("js-yaml"),
+    queue = require("queue-async"),
+    papi = require('papi-client'),
+    getDownloadConfig = require("../lib/get-download-config");
+
+var config = yaml.load(fs.readFileSync(path.join(__dirname, "../config.yml"), "utf-8")),
+    dataDir = 'data',
+    source = 'index';
+
+config.pages = config.pages || {};
+config.service = 'preview';
+config.embedded = 'publish';
+if (source == "index") config.pages[source] = _.extend(config, config.pages[source]);
+
+var page_id = get(config, ['pages', source, 'scoop_asset_id']);
+
+var tasks = queue();
+
+tasks.defer(writeFile, 100000003858048, 'section');
+if (page_id) tasks.defer(writeFile, page_id, source);
+
+tasks.await(function(err) {
+  if (err) console.log(err);
+});
+
+function writeFile(id, _name, callback) {
+  var name = _name || id;
+  papi.load(+id, config, function(err, scoop) {
+    if (err || scoop.status == 'ERROR') {
+      console.log('ERROR loading related asset', id);
+    } else {
+      var content = JSON.stringify(scoop, null, 4);
+      fs.writeFileSync(path.join(dataDir, 'related_assets', name + '.json'), content);
+    }
+    callback(null);
+  });
+}
+
+function get(obj, arr) {
+  return _.reduce(arr, function(o, idx) { return o && o[idx] ? o[idx] : null; }, obj);
+}

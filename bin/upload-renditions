@@ -1,0 +1,141 @@
+#!/usr/bin/env node
+
+var Scoop = require("scoop-client"),
+		fs = require("fs"),
+		papi = require('papi-client'),
+		queue = require("queue-async"),
+		child = require("child_process");
+
+var deferredError = false;
+
+var skip = false;
+process.argv.forEach(function (val, index, array) {
+	if (index == 2 && val == "skip-push") {
+		skip = true;
+	}
+});
+
+if (skip) {
+	queue(1)
+		.defer(uploadImage)
+		.await(done);
+} else {
+	queue(1)
+		.defer(verifyCleanWorkingTree)
+		.defer(verifyLocalMaster)
+		.defer(verifyRemoteMaster)
+		.defer(verifyNoDeferredErrors)
+		.defer(pushToMaster)
+		.defer(uploadImage)
+		.await(done);
+}
+
+function verifyCleanWorkingTree(callback) {
+  child.exec("git status -s", function(error, stdout) {
+    if (stdout.trim()) deferError("uncommitted changes; try:\n\n  git add .\n  git commit\n");
+    callback(null);
+  });
+}
+
+function verifyLocalMaster(callback) {
+  child.exec("git rev-parse --abbrev-ref HEAD", function(error, stdout) {
+    if (stdout.trim() !== "master") deferError("not on master branch; try:\n\n  git checkout master\n");
+    callback(null);
+  });
+}
+
+function verifyRemoteMaster(callback) {
+  child.exec("git rev-parse --abbrev-ref --symbolic-full-name @{u}", function(error, stdout) {
+    if (stdout.trim() !== "origin/master") deferError("not tracking upstream master; try:\n\n  git push -u origin master\n");
+    callback(null);
+  });
+}
+
+function pushToMaster(callback) {
+  var spawn = child.spawn("git", ["push", "origin", "master"]);
+  spawn.stdout.pipe(process.stdout, {end: false});
+  spawn.stderr.pipe(process.stderr, {end: false});
+  spawn.on("exit", function(code) { callback(code || null); });
+}
+
+function verifyNoDeferredErrors(callback) {
+  callback(deferredError ? "Please push up all your changes before running this script." : null);
+}
+
+function deferError(message) {
+  deferredError = true;
+}
+
+function uploadImage() {
+	var doc = fs.readFileSync("data/doc.json");
+	doc = JSON.parse(doc);
+
+	if (doc.yml.pages.index.scoop_asset_id === "") {
+		console.log("\x1b[35m", "No scoop asset id provided. Please add to your Google Doc.");
+		return;
+	}
+
+	var scoop_asset_id = doc.yml.pages.index.scoop_asset_id;
+
+	papi.load(+scoop_asset_id, {"service": "preview"}, function(err, scoop){
+		if (err) console.log(err);
+
+		if (!scoop.result.promotional_media) {
+			console.log("\x1b[35m", "Please create a promo image for your scoop asset before you run this script.");
+			return;
+		}
+
+		var scoop_image_id = scoop.result.promotional_media.data_id;
+
+		fs.readdir("promos", function(err, filenames) {
+			filenames = filenames.filter(function(d) { return d.indexOf("jpg") > -1 || d.indexOf("png") > -1 || d.indexOf("gif") > -1; });
+
+			var image = new Scoop.Image({
+				environment: "production"
+			});
+
+			filenames.forEach(function(file){
+				var rendition_name = file.split("-")[file.split("-").length - 1].split(".")[0];
+
+				if (rendition_name != "master") {
+					image.upload_rendition({
+						file: "promos/" + file,
+						id: scoop_image_id,
+						renditionName: rendition_name
+					}, function(error, response, result){
+						result = JSON.parse(result);
+						if (result.errors) {
+							console.log("\x1b[35m", "Failed to upload " + rendition_name + ". ERROR: " + result.errors.error);
+						} else if (result.status == "OK") {
+							console.log("\x1b[32m", "Successfully uploaded " + rendition_name);
+						} else {
+							console.log(result);
+						}
+					});
+				}
+			});
+			
+			setTimeout(function(){
+				console.log("\n");
+				console.log("\x1b[37m", "Publishing image asset...");
+				image.publish({
+					id: scoop_image_id
+				}, function(error, response, result){
+					result = JSON.parse(result);
+					if (result.status == "OK") {
+						console.log("\x1b[32m", "Successfully published image asset " + scoop_image_id);
+					} else {
+						console.log("\x1b[35m", result);
+					}
+				});
+			}, filenames.length*1000);
+		});
+	});
+}
+
+function done(error) {
+  if (error) {
+    console.warn(error);
+    process.exit(1);
+  }
+}

@@ -1,0 +1,48 @@
+<% if (data.__related) { %>
+  <style type="text/css">
+    #g-refers { overflow:hidden; width:100%; margin: 80px auto auto;  padding:0; color:#CCC; border-top:1px solid #dbdbdb; }
+    #g-refers .g-refer-text { margin:20px 0 0; width:100%; clear:both; }
+    .tinyportrait #g-refers .g-refer-text.g-clearfix { width:70%; margin:20px auto; }
+    #g-refers a { color:#333; }
+    #g-refers a:hover { text-decoration:none; color:#333; }
+    #g-refers a:hover p { text-decoration:underline; }
+    #g-refers h2 { font:400 22px/28px "Circular std",CircularBlack,nyt-franklin,helvetica,arial; margin-bottom:6px; color:#fff; }
+    #g-refers h3 { font:200 16px/22px "Circular std",CircularBlack,nyt-franklin,helvetica,arial; width:100%; margin-bottom:10px; color:#fff; }
+    #g-refers h4 { clear:both; font:200 14px/22px nyt-franklin,arial; text-transform:uppercase; width:100%; color:#333; font-weight:300; font-size:17px; letter-spacing:1px; }
+    #g-refers h5 { font:400 12px/12px nyt-franklin,Helvetica,Arial; text-transform:uppercase; margin:8px 0; font-weight:700; }
+    #g-refers h5>span { color:#555; display:block; margin-left:0; padding-left:0; font-weight:300; text-transform:none; margin-top:6px; }
+    #g-refers p { font:400 14px/20px nyt-franklin,Helvetica,Arial; max-width:700px; }
+    #g-refers .g-refer { margin:10px auto; width:100%; }
+    .viewport-small-10 #g-refers .g-refer { float:left; width:43%; margin:10px 5% 0 0; }
+    .viewport-medium #g-refers .g-refer { width:22.5%; margin:20px 3% 0 0; }
+    .viewport-medium #g-refers .g-refer:last-child { margin-right:0; }
+    #g-refers .g-refer p { color:#333; font-size:17px; font-family:nyt-franklin,arial,sans-serif; font-weight:300; }
+    #g-refers .g-credits { margin-top:20px; max-width:380px; }
+    #g-refers .g-credits p { margin:4px auto; font:400 12px/16px nyt-franklin,Helvetica,Arial; color:#666; }
+    #g-refers > .g-icon { display:block; margin:40px 0; }
+    #g-refers > img { width:100%; display:block; margin:40px auto 20px; }
+    #g-refers .g-refer p { margin-bottom: 0; }
+  </style>
+  <div id="g-refers">
+    <div class="g-refer-text g-clearfix">
+      <h4><% if (data.__related.link) { print('<a href="'+data.__related.link+'">'); } %>Related Coverage »<% if (data.__related.link) { print('</a>'); } %></h4>
+      <ul id="g-refers-list">
+      <% _.each(data.__related.assets, function(asset) { %>
+        <li class="g-refer">
+          <a href="<%= asset.url %>">
+              <img class="thumb-img" title="<%= asset.summary %>" src="<%= asset.promotional_media.image.image_crops.videoSixteenByNine600.url %>">
+              <p><%= asset.headline %></p>
+          </a>
+        </li>
+      <% }); %>
+      </ul>
+    </div>
+  </div>
+  <script type="text/javascript">
+  require(['foundation/main'], function() {
+    require(['jquery/nyt'], function($) {
+      $('article footer.story-footer').after($('#g-refers').get(0));
+    });
+  });
+  </script>
+<% } %>

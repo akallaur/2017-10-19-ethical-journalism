@@ -1,0 +1,142 @@
+---
+# CONTENT
+headline: Untitled Graphic
+leadin: Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+byline: By THE NEW YORK TIMES
+credit:
+sources:
+notes:
+summary:                         # `summary` is now pushed to Scoop automatically
+last_updated_text:
+# related_article: true          # View Related Article link
+
+# METADATA
+min_width: 300
+max_width: 1050
+constrain_width_to_text_column: false
+display_for_promotion_only: false
+show_in_compatible_apps: 'yes'   # 'yes', 'yesDoNotEmbed', 'no'
+
+# PUBLISH SETTINGS
+publish_system: scoop            # scoop, scoop_freeform
+environment: production          # production, staging
+scoop_publish_fields: true
+
+# SCOOP ASSET KEY
+# scoop_asset_id:
+# scoop_slug:
+# scoop_username:
+# scoop_external_edit_key:
+
+# PREVIEW SETTINGS
+page_template: nyt5-standard     # nyt5-article-embed, local:index, hp-bcol-photospot, hp-acol
+display_style: standard          # standard, blank or minimal (blank and minimal must use page_template: local:index)
+# section_name: U.S.             # Upshot, Magazine (must use page_template: local:index)
+# display_overrides:
+  # - HIDE_RIBBON
+  # - INCLUDE_TRANSPARENT_MASTHEAD_WITH_WHITE_ICONS
+
+# GOOGLE DOC LOADER
+# Put your Google Doc in the "Preview docs" folder
+# or share it with 511847675586-dvu01fndl7cf8nvqhce6j9tuhbgt10rf@developer.gserviceaccount.com
+# google_docs:
+#   - name: doc
+#     key: "1q2kHOIpzdNG-I6z8tNbuxUpBt-hw4HAI6uQymkIulzI"
+#     oauth: "511847675586-dvu01fndl7cf8nvqhce6j9tuhbgt10rf.json"
+#     format: archieml
+#     preserve_styles: ['bold', 'italic', 'underline']
+
+#freeform-test: 1fFe033aLmAKvBpSdLmkOMD_ly7BpIu2oYRd5aj0zxDM
+
+# WEB UPDATES
+# Disable this to prevent updates and republishing via the web
+make_cmd: download
+
+# DATA LOADING
+# load_data_manually: true       # If true, run 'make download' to get data
+# data_vault:
+#   fruits: 908
+# Put your Google Spreadsheet in the "Preview docs" folder
+# or share it with 511847675586-dvu01fndl7cf8nvqhce6j9tuhbgt10rf@developer.gserviceaccount.com
+# google_spreadsheets:
+#   - name: "rows"
+#     key: "1qZ1LNZBqYP84I-YgPZl5nZrLpRaM9WbbyINuFGS2lhI"
+#     oauth: "511847675586-dvu01fndl7cf8nvqhce6j9tuhbgt10rf.json"
+#     sheet: "mens_halfpipe"
+# data_urls:
+#   slideshow: http://www.nytimes.com/slideshow/2014/02/09/magazine/09look-Croagh-Patrick.slideshow.json
+
+# ARTICLE DATA AND TEMPLATES
+# Run `make download` to get the latest JSON
+# article:
+#   content: 100000003182219     # 100000003116096, lorem
+#   section_name: U.S.           # Upshot, Magazine
+#   environment: production      # staging, production
+#   service: publish             # preview, publish
+#   display_style: standard      # standard, minimal
+#   # embedded: publish          # Download embedded assets as JSON
+# page_template: local:article   # Use this to preview articles locally
+# position: paragraph3
+
+# SCOOP IMAGES
+# scoop_images:
+#   - 100000003182219
+
+# MULTIPLE ASSETS
+# pages:
+#   promo:
+#     min_width: 300
+#     max_width: 720
+#     show_in_compatible_apps: 'yes'
+#     page_template: nyt5-article-embed
+#     scoop_asset_id:
+#     scoop_slug:
+#     scoop_username:
+#     scoop_external_edit_key:
+#     link: put-in-your-live-link
+#   map:
+#     min_width: 300
+#     max_width: 1050
+#     show_in_compatible_apps: 'yes'
+#     page_template: nyt5-article-embed
+
+# SCOOP JSON
+# Run `make download` to get the latest JSON
+# scoop:
+#   service: publish             # preview, publish
+#   environment: production      # production, staging
+#   assets:
+#     - 100000003076005
+#     - 100000003080471
+
+# CHARTMAKER AND MAPMAKER
+# Add your Chartmaker and Mapmaker URLs below:
+# external_assets:
+#   - http://chartmaker.stg.nytimes.com/####
+
+# MEDIA
+video:
+  quality: 3 # 1 (low) - 5 (high). Videotape - based encodes only.
+  sizes:
+    - 320
+    - 640
+    - 900
+videotape_path: 2015/01/12/$yourslug # Update to YYYY/MM/DD/slug, where slug is alphanumberic, underscores and hyphens
+images:
+  standard_quality: 65 # 1 (low) - 100 (high).
+  retina_quality: 30 # 0 to disable. 1 (low) - 100 (high). 20-40 is a good starter setting. Retina quality holds up w/ pretty low settings
+  sizes:
+    - 320
+    - 640
+    - 900
+    - 1254
+    - 2000
+
+# HEAD CSS/JS
+# freeform_css: ""
+# freeform_js: ""
+
+# TROUBLESHOOTING
+live_templates: true                    # false to disable live templates
+# download_continuously: true             # enable continuous google doc and spreadsheet downloads
+# require_base_url: http://a1.nyt.com   # Uncomment to use live assets
